@@ -13,7 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
    *   + IF(C10=TRUE,(SQRT(C4)*4/5)*490,0)
    *   + IF(C11=TRUE,1500*CEILING(C4/50,1),0)
    *   )
-   */
+   * 
+   **/
 
   function calculateArbetskostnad() {
 
