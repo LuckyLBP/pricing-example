@@ -1,6 +1,8 @@
 let pricingData = null; 
 let currentServiceKey = "";
 
+// När sidan laddas, hämta prisdata och sätt upp händelselyssnare
+
 document.addEventListener("DOMContentLoaded", async () => {
   pricingData = await loadPricingData();
   
@@ -16,24 +18,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
-
+// Funktion för att ladda prisdata från en JSON-fil
 async function loadPricingData() {
   try {
     const response = await fetch("pricing.json");
     if (!response.ok) {
-      throw new Error(`Failed to load pricing data (status: ${response.status})`);
+      throw new Error(`Misslyckades att ladda prisdata (status: ${response.status})`);
     }
     return await response.json();
   } catch (error) {
-    console.error("Error loading pricing data:", error);
+    console.error("Fel vid inläsning av prisdata:", error);
     return null;
   }
 }
 
-
+// Funktion för att fylla dropdown med tillgängliga tjänster
 function populateServiceSelect(data) {
   if (!data || !data.services) {
-    console.error("Invalid pricing data structure.");
+    console.error("Felaktig struktur på prisdata.");
     return;
   }
   const serviceSelect = document.getElementById("serviceSelect");
@@ -53,7 +55,7 @@ function populateServiceSelect(data) {
   });
 }
 
-
+// Funktion för att bygga formulär baserat på vald tjänst
 function buildFormForService(serviceKey) {
   const formContainer = document.getElementById("formContainer");
   formContainer.innerHTML = "";
@@ -93,87 +95,99 @@ function buildFormForService(serviceKey) {
   });
 }
 
-
+// Funktion för att beräkna priset baserat på formulärinmatning
 function calculatePrice() {
-  if (!currentServiceKey) {
-    document.getElementById("calculationResult").innerText = "Välj tjänst först!";
-    return;
-  }
-  const service = pricingData.services[currentServiceKey];
-  if (!service) {
-    document.getElementById("calculationResult").innerText = "Felaktig tjänst!";
-    return;
-  }
-
-  const { yta_koefficient, grundkostnad_per_enhet } = service.baseSettings;
-
-
-  const inputs = {};
-  service.fields.forEach((field) => {
-    const el = document.getElementById(field.id);
-    if (!el) return;
+    if (!currentServiceKey) {
+      document.getElementById("calculationResult").innerText = "Välj tjänst först!";
+      return;
+    }
+    const service = pricingData.services[currentServiceKey];
+    if (!service) {
+      document.getElementById("calculationResult").innerText = "Felaktig tjänst!";
+      return;
+    }
+  
+    const { yta_koefficient, grundkostnad_per_enhet } = service.baseSettings;
+  
+    // Hämta användarens inmatade värden
+    const inputs = {};
+    service.fields.forEach((field) => {
+      const el = document.getElementById(field.id);
+      if (!el) return;
+      
+      if (field.type === "number") {
+        inputs[field.id] = parseFloat(el.value);
+      } else if (field.type === "select") {
+        if (el.value === "true") {
+          inputs[field.id] = true;
+        } else if (el.value === "false") {
+          inputs[field.id] = false;
+        } else {
+          inputs[field.id] = el.value;
+        }
+      }
+    });
+  
+    if (!inputs.yta || isNaN(inputs.yta) || inputs.yta <= 0) {
+      document.getElementById("calculationResult").innerText = 
+        "Ange giltig yta!";
+      return;
+    }
     
-    if (field.type === "number") {
-      inputs[field.id] = parseFloat(el.value);
-    } else if (field.type === "select") {
-      if (el.value === "true") {
-        inputs[field.id] = true;
-      } else if (el.value === "false") {
-        inputs[field.id] = false;
-      } else {
-        inputs[field.id] = el.value;
+    // Beräkna grundpriset (exkl. moms)
+    let totalPrice = inputs.yta * yta_koefficient * grundkostnad_per_enhet;
+  
+    // Exempel: Om tjänsten är "golvyta", applicera extra multipliers och tillägg
+    if (currentServiceKey === "golvyta") {
+      const { rivningAvBefintligtGolv, ojamnYta } = service.multipliers;
+      const { rivningLister, monteringLister, deponering } = service.extraCosts;
+  
+      if (inputs.rivningBefGolv === true) {
+        totalPrice *= rivningAvBefintligtGolv; 
+      }
+      if (inputs.underlagSkick === "ojamn") {
+        totalPrice *= ojamnYta;
+      }
+      if (inputs.rivningBefLister === true) {
+        totalPrice += (Math.sqrt(inputs.yta) * rivningLister.factor / rivningLister.divider)
+                      * grundkostnad_per_enhet;
+      }
+      if (inputs.monteringLister === true) {
+        totalPrice += (Math.sqrt(inputs.yta) * monteringLister.factor / monteringLister.divider)
+                      * grundkostnad_per_enhet;
+      }
+      if (inputs.deponering === true) {
+        const blocksNeeded = Math.ceil(inputs.yta / deponering.blockSize);
+        totalPrice += blocksNeeded * deponering.prisPerBlock;
+      }
+  
+    } else if (currentServiceKey === "bygg") {
+      // Exempel för "bygg"
+      const { someSpecialMultiplier } = service.multipliers;
+      const { someExtraCost } = service.extraCosts;
+  
+      if (inputs.someSpecialOption === true) {
+        totalPrice *= someSpecialMultiplier; 
+        totalPrice += someExtraCost.fixedCost;
       }
     }
-  });
-
-  if (!inputs.yta || isNaN(inputs.yta) || inputs.yta <= 0) {
-    document.getElementById("calculationResult").innerText = 
-      "Ange giltig yta!";
-    return;
-  }
   
-  let totalPrice = inputs.yta * yta_koefficient * grundkostnad_per_enhet;
-
-  if (currentServiceKey === "golvyta") {
-    const { rivningAvBefintligtGolv, ojamnYta } = service.multipliers;
-    const { rivningLister, monteringLister, deponering } = service.extraCosts;
-
-    if (inputs.rivningBefGolv === true) {
-      totalPrice *= rivningAvBefintligtGolv; 
-    }
-
-    if (inputs.underlagSkick === "ojamn") {
-      totalPrice *= ojamnYta; 
-    }
-
-    if (inputs.rivningBefLister === true) {
-      totalPrice += (Math.sqrt(inputs.yta) * rivningLister.factor / rivningLister.divider)
-                    * grundkostnad_per_enhet;
-    }
-
-    if (inputs.monteringLister === true) {
-      totalPrice += (Math.sqrt(inputs.yta) * monteringLister.factor / monteringLister.divider)
-                    * grundkostnad_per_enhet;
-    }
-
-    if (inputs.deponering === true) {
-      const blocksNeeded = Math.ceil(inputs.yta / deponering.blockSize);
-      totalPrice += blocksNeeded * deponering.prisPerBlock;
-    }
-
-  } else if (currentServiceKey === "bygg") {
-
-    const { someSpecialMultiplier } = service.multipliers;
-    const { someExtraCost } = service.extraCosts;
-
-    if (inputs.someSpecialOption === true) {
-      totalPrice *= someSpecialMultiplier;
-
-      totalPrice += someExtraCost.fixedCost;
-    }
+    // Ex. moms
+    const exMoms = totalPrice.toFixed(0);
+    document.getElementById("calculationResult").innerText =
+      `Pris (exkl. moms): ${exMoms} kr`;
+  
+    // Pris inkl. moms
+    const incMomsValue = totalPrice * 1.25;
+    const incMoms = incMomsValue.toFixed(0);
+    document.getElementById("calculationResultIncMoms").innerText =
+      `Pris (inkl. moms): ${incMoms} kr`;
+  
+    // Pris efter ROT
+    // OBS: Detta är en förenklad variant utan max-gränser
+    const rotDeduction = incMomsValue * 0.3;
+    const priceAfterROT = incMomsValue - rotDeduction;
+  
+    document.getElementById("calculationResultROT").innerText =
+      `Pris efter ROT-avdrag (30 % på arbetskostnad): ${priceAfterROT.toFixed(0)} kr`;
   }
-
-  const formatted = totalPrice.toFixed(0);
-  document.getElementById("calculationResult").innerText =
-    `Pris (exkl. moms): ${formatted} kr`;
-}
