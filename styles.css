@@ -1,40 +1,110 @@
-body {
-    font-family: Arial, sans-serif;
+* {
+    box-sizing: border-box;
+  }
+  
+  body {
+    margin: 0;
+    background: linear-gradient(150deg, #f0f4f8 0%, #d9e2ec 100%);
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    color: #333;
+  }
+  
+  /* Center Container */
+  .app-container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 40px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     text-align: center;
-    padding: 20px;
   }
   
-  .container {
-    max-width: 500px;
-    margin: auto;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    background: #f9f9f9;
+  /* Headline */
+  .app-container h1 {
+    margin: 0 0 30px;
+    font-size: 2rem;
+    color: #1f2937;
   }
   
-  label {
+  /* Label Style */
+  .app-label {
     display: block;
     text-align: left;
-    margin-top: 15px;
-    font-weight: bold;
+    font-weight: 600;
+    margin: 15px 0 5px;
   }
   
-  input, select {
+  /* Input och Select Style */
+  .app-select,
+  .app-container input[type="number"] {
     width: 100%;
-    padding: 8px;
-    margin: 5px 0;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: #f8fafc;
+    color: #111827;
   }
   
-  button {
-    margin-top: 20px;
-    padding: 10px 20px;
+  .app-select:focus,
+  .app-container input[type="number"]:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+  
+  /* Dynamisk Form */
+  #formContainer label {
+    text-align: left;
+    display: block;
+    font-weight: 600;
+    margin: 15px 0 5px;
+  }
+  
+  #formContainer input[type="number"],
+  #formContainer select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #f8fafc;
+    font-size: 1rem;
+  }
+  
+  /* Knappar */
+  .calculate-btn {
+    display: inline-block;
+    background-color: #3b82f6;
+    color: #ffffff;
+    border: none;
+    padding: 14px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 6px;
     cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .calculate-btn:hover {
+    background-color: #2563eb;
+  }
+  
+  .calculate-btn:active {
+    background-color: #1d4ed8;
+  }
+  
+  /* Resultat */
+  #resultsContainer {
+    margin-top: 30px;
+    text-align: left;
   }
   
   .result {
-    margin-top: 20px;
-    font-size: 1.2em;
-    font-weight: bold;
-    min-height: 30px;
+    margin: 10px 0;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #1f2937;
   }

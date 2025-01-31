@@ -1,27 +1,30 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Prisräknare</title>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.3.2/dist/confetti.browser.min.js"></script>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="container">
+  <div class="app-container">
     <h1>Prisräknare</h1>
-    
-    <!-- Service Selector -->
-    <label for="serviceSelect">Välj tjänst:</label>
-    <select id="serviceSelect"></select>
 
-    <!-- Dynamic Form Container -->
+    <!-- Välj Service -->
+    <label for="serviceSelect" class="app-label">Välj tjänst:</label>
+    <select id="serviceSelect" class="app-select"></select>
+
+    <!-- Dynamisk Form -->
     <div id="formContainer"></div>
     
-    <!-- Result -->
-    <button id="calculateBtn">Beräkna</button>
-    <div class="result" id="calculationResult">Pris (exkl. moms): –</div>
-    <div class="result" id="calculationResultIncMoms">Pris (inkl. moms): –</div>
-    <!-- New ROT line here -->
-    <div class="result" id="calculationResultROT">Pris efter ROT-avdrag: –</div>
+    <!-- Knapp + Resultat -->
+    <button id="calculateBtn" class="calculate-btn">Beräkna</button>
+    
+    <div id="resultsContainer">
+      <div class="result" id="calculationResult">Pris (exkl. moms): –</div>
+      <div class="result" id="calculationResultIncMoms">Pris (inkl. moms): –</div>
+      <div class="result" id="calculationResultROT">Pris efter ROT-avdrag: –</div>
+    </div>
   </div>
 
   <script src="script.js"></script>
