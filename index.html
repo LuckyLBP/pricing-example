@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Prisräknare</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Exempel Räknare för Golvyta</h2>
+    
+    <!-- Yta -->
+    <label for="yta">Yta (m²):</label>
+    <input type="number" id="yta" placeholder="Ange yta" min="1" />
+
+    <!-- Befintligt golv (rivning) -->
+    <label for="rivningBefGolv">Rivning av befintligt golv:</label>
+    <select id="rivningBefGolv">
+      <option value="false">Nej</option>
+      <option value="true">Ja</option>
+    </select>
+
+    <!-- Rivning av befintliga golvlister -->
+    <label for="rivningLister">Rivning av befintliga golvlister:</label>
+    <select id="rivningLister">
+      <option value="false">Nej</option>
+      <option value="true">Ja</option>
+    </select>
+    
+    <!-- Befintligt skick av underlag -->
+    <label for="underlagSkick">Befintligt skick av underlag:</label>
+    <select id="underlagSkick">
+      <option value="jamn">Jämn yta</option>
+      <option value="ojamnj">ojämn yta (justering behövs)</option>
+    </select>
+    
+    <!-- Montering av nya lister -->
+    <label for="monteringLister">Montering av nya lister:</label>
+    <select id="monteringLister">
+      <option value="false">Nej</option>
+      <option value="true">Ja</option>
+    </select>
+
+    <!-- Deponering av byggavfall -->
+    <label for="deponering">Deponering av byggavfall:</label>
+    <select id="deponering">
+      <option value="false">Nej</option>
+      <option value="true">Ja</option>
+    </select>
+
+    <button id="calculateBtn">Beräkna Arbetskostnad (exkl. moms)</button>
+    <div class="result" id="arbetskostnadExMoms">Arbetskostnad: 0 kr</div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
