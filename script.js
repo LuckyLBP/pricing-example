@@ -172,7 +172,7 @@ function calculatePrice() {
       }
     }
   
-    // Ex. moms
+    // Pris ex. moms
     const exMoms = totalPrice.toFixed(0);
     document.getElementById("calculationResult").innerText =
       `Pris (exkl. moms): ${exMoms} kr`;
