@@ -1,0 +1,122 @@
+{
+    "services": {
+      "golvyta": {
+        "displayName": "Golvyta",
+        "baseSettings": {
+          "yta_koefficient": 0.4,
+          "grundkostnad_per_enhet": 490
+        },
+        "multipliers": {
+          "rivningAvBefintligtGolv": 1.08,
+          "ojamnYta": 1.4
+        },
+        "extraCosts": {
+          "rivningLister": {
+            "factor": 4,
+            "divider": 10
+          },
+          "monteringLister": {
+            "factor": 4,
+            "divider": 5
+          },
+          "deponering": {
+            "prisPerBlock": 1500,
+            "blockSize": 50
+          }
+        },
+        "fields": [
+          {
+            "id": "yta",
+            "label": "Yta (m²)",
+            "type": "number",
+            "default": 100,
+            "min": 1
+          },
+          {
+            "id": "rivningBefGolv",
+            "label": "Rivning av befintligt golv",
+            "type": "select",
+            "options": [
+              {"value": "false", "text": "Nej"},
+              {"value": "true",  "text": "Ja"}
+            ],
+            "default": "false"
+          },
+          {
+            "id": "rivningBefLister",
+            "label": "Rivning av befintliga golvlister",
+            "type": "select",
+            "options": [
+              {"value": "false", "text": "Nej"},
+              {"value": "true",  "text": "Ja"}
+            ],
+            "default": "false"
+          },
+          {
+            "id": "underlagSkick",
+            "label": "Befintligt skick av underlag",
+            "type": "select",
+            "options": [
+              {"value": "jamn", "text": "Jämn yta"},
+              {"value": "ojamn", "text": "ojämn yta (justering behövs)"}
+            ],
+            "default": "jamn"
+          },
+          {
+            "id": "monteringLister",
+            "label": "Montering av nya lister",
+            "type": "select",
+            "options": [
+              {"value": "false", "text": "Nej"},
+              {"value": "true",  "text": "Ja"}
+            ],
+            "default": "false"
+          },
+          {
+            "id": "deponering",
+            "label": "Deponering av byggavfall",
+            "type": "select",
+            "options": [
+              {"value": "false", "text": "Nej"},
+              {"value": "true",  "text": "Ja"}
+            ],
+            "default": "false"
+          }
+        ]
+      },
+      "bygg": {
+        "displayName": "Bygg",
+        "baseSettings": {
+          "yta_koefficient": 0.2,
+          "grundkostnad_per_enhet": 600
+        },
+        "multipliers": {
+          "someSpecialMultiplier": 1.15
+        },
+        "extraCosts": {
+          "someExtraCost": {
+            "fixedCost": 1000
+          }
+        },
+        "fields": [
+          {
+            "id": "yta",
+            "label": "Yta (m²)",
+            "type": "number",
+            "default": 50,
+            "min": 1
+          },
+          {
+            "id": "someSpecialOption",
+            "label": "Något special arbete",
+            "type": "select",
+            "options": [
+              {"value": "false", "text": "Nej"},
+              {"value": "true",  "text": "Ja"}
+            ],
+            "default": "false"
+          }
+        ]
+      }
+    }
+  }

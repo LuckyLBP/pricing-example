@@ -1,68 +1,179 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const btn = document.getElementById("calculateBtn");
-    btn.addEventListener("click", calculateArbetskostnad);
+let pricingData = null; 
+let currentServiceKey = "";
+
+document.addEventListener("DOMContentLoaded", async () => {
+  pricingData = await loadPricingData();
+  
+  populateServiceSelect(pricingData);
+
+  document.getElementById("serviceSelect").addEventListener("change", (e) => {
+    currentServiceKey = e.target.value;
+    buildFormForService(currentServiceKey);
   });
   
-  /**
-   *
-   * Arbetskostnad (exkl. moms) =
-   *   (C4*(0,4)*490
-   *    * IF(C6=TRUE,1,08,1)
-   *    * IF(C8="ojämn yta (justering behövs)",1,4,1)
-   *   + IF(C7=TRUE,(SQRT(C4)*4/10)*490,0)
-   *   + IF(C10=TRUE,(SQRT(C4)*4/5)*490,0)
-   *   + IF(C11=TRUE,1500*CEILING(C4/50,1),0)
-   *   )
-   * 
-   **/
+  document.getElementById("calculateBtn").addEventListener("click", () => {
+    calculatePrice();
+  });
+});
 
-  function calculateArbetskostnad() {
 
-    const yta = parseFloat(document.getElementById("yta").value);
-    const rivningBefGolv = document.getElementById("rivningBefGolv").value === "true";
-    const rivningLister = document.getElementById("rivningLister").value === "true";
-    const underlagSkick = document.getElementById("underlagSkick").value;
-    const monteringLister = document.getElementById("monteringLister").value === "true";
-    const deponering = document.getElementById("deponering").value === "true";
-  
-    if (isNaN(yta) || yta <= 0) {
-      document.getElementById("arbetskostnadExMoms").innerText =
-        "Ange en giltig yta!";
-      return;
+async function loadPricingData() {
+  try {
+    const response = await fetch("pricing.json");
+    if (!response.ok) {
+      throw new Error(`Failed to load pricing data (status: ${response.status})`);
     }
-  
-    const YTA_KOEFFICIENT = 0.4;      
-    const GRUNDKOSTNAD_PER_ENHET = 490; 
-    const RIVNING_MULTIPLIER = 1.08;  
-    const OJAMN_YTA_MULTIPLIER = 1.4; 
-    const LISTER_RIVNING_FACTOR = 4/10;  
-    const MONTERING_FACTOR = 4/5;        
-    const DEPONERING_COST_PER_BLOCK = 1500;
-    const DEPONERING_BLOCK_SIZE = 50;
-  
-    let arbetskostnad = yta * YTA_KOEFFICIENT * GRUNDKOSTNAD_PER_ENHET;
-  
-    if (rivningBefGolv) {
-      arbetskostnad *= RIVNING_MULTIPLIER;
-    }
-  
-    if (underlagSkick === "ojamnj") {
-      arbetskostnad *= OJAMN_YTA_MULTIPLIER;
-    }
-  
-    if (rivningLister) {
-      arbetskostnad += (Math.sqrt(yta) * LISTER_RIVNING_FACTOR) * GRUNDKOSTNAD_PER_ENHET;
-    }
-  
-    if (monteringLister) {
-      arbetskostnad += (Math.sqrt(yta) * MONTERING_FACTOR) * GRUNDKOSTNAD_PER_ENHET;
-    }
-  
-    if (deponering) {
-      const blocksNeeded = Math.ceil(yta / DEPONERING_BLOCK_SIZE);
-      arbetskostnad += blocksNeeded * DEPONERING_COST_PER_BLOCK;
-    }
-  
-    document.getElementById("arbetskostnadExMoms").innerText =
-      "Arbetskostnad: " + arbetskostnad.toFixed(0) + " kr";
+    return await response.json();
+  } catch (error) {
+    console.error("Error loading pricing data:", error);
+    return null;
   }
+}
+
+
+function populateServiceSelect(data) {
+  if (!data || !data.services) {
+    console.error("Invalid pricing data structure.");
+    return;
+  }
+  const serviceSelect = document.getElementById("serviceSelect");
+  serviceSelect.innerHTML = "";
+
+  const placeholderOption = document.createElement("option");
+  placeholderOption.value = "";
+  placeholderOption.innerText = "— Välj tjänst —";
+  serviceSelect.appendChild(placeholderOption);
+
+  Object.keys(data.services).forEach((serviceKey) => {
+    const service = data.services[serviceKey];
+    const option = document.createElement("option");
+    option.value = serviceKey;
+    option.innerText = service.displayName;
+    serviceSelect.appendChild(option);
+  });
+}
+
+
+function buildFormForService(serviceKey) {
+  const formContainer = document.getElementById("formContainer");
+  formContainer.innerHTML = "";
+
+  if (!pricingData || !pricingData.services[serviceKey]) {
+    return;
+  }
+
+  const service = pricingData.services[serviceKey];
+
+  service.fields.forEach((field) => {
+    const label = document.createElement("label");
+    label.setAttribute("for", field.id);
+    label.innerText = field.label;
+    formContainer.appendChild(label);
+
+    if (field.type === "number") {
+      const inputEl = document.createElement("input");
+      inputEl.type = "number";
+      inputEl.id = field.id;
+      if (field.min) inputEl.min = field.min;
+      if (field.default !== undefined) inputEl.value = field.default;
+      formContainer.appendChild(inputEl);
+
+    } else if (field.type === "select") {
+      const selectEl = document.createElement("select");
+      selectEl.id = field.id;
+      field.options.forEach((opt) => {
+        const optionEl = document.createElement("option");
+        optionEl.value = opt.value;
+        optionEl.text = opt.text;
+        selectEl.appendChild(optionEl);
+      });
+      selectEl.value = field.default;
+      formContainer.appendChild(selectEl);
+    }
+  });
+}
+
+
+function calculatePrice() {
+  if (!currentServiceKey) {
+    document.getElementById("calculationResult").innerText = "Välj tjänst först!";
+    return;
+  }
+  const service = pricingData.services[currentServiceKey];
+  if (!service) {
+    document.getElementById("calculationResult").innerText = "Felaktig tjänst!";
+    return;
+  }
+
+  const { yta_koefficient, grundkostnad_per_enhet } = service.baseSettings;
+
+
+  const inputs = {};
+  service.fields.forEach((field) => {
+    const el = document.getElementById(field.id);
+    if (!el) return;
+    
+    if (field.type === "number") {
+      inputs[field.id] = parseFloat(el.value);
+    } else if (field.type === "select") {
+      if (el.value === "true") {
+        inputs[field.id] = true;
+      } else if (el.value === "false") {
+        inputs[field.id] = false;
+      } else {
+        inputs[field.id] = el.value;
+      }
+    }
+  });
+
+  if (!inputs.yta || isNaN(inputs.yta) || inputs.yta <= 0) {
+    document.getElementById("calculationResult").innerText = 
+      "Ange giltig yta!";
+    return;
+  }
+  
+  let totalPrice = inputs.yta * yta_koefficient * grundkostnad_per_enhet;
+
+  if (currentServiceKey === "golvyta") {
+    const { rivningAvBefintligtGolv, ojamnYta } = service.multipliers;
+    const { rivningLister, monteringLister, deponering } = service.extraCosts;
+
+    if (inputs.rivningBefGolv === true) {
+      totalPrice *= rivningAvBefintligtGolv; 
+    }
+
+    if (inputs.underlagSkick === "ojamn") {
+      totalPrice *= ojamnYta; 
+    }
+
+    if (inputs.rivningBefLister === true) {
+      totalPrice += (Math.sqrt(inputs.yta) * rivningLister.factor / rivningLister.divider)
+                    * grundkostnad_per_enhet;
+    }
+
+    if (inputs.monteringLister === true) {
+      totalPrice += (Math.sqrt(inputs.yta) * monteringLister.factor / monteringLister.divider)
+                    * grundkostnad_per_enhet;
+    }
+
+    if (inputs.deponering === true) {
+      const blocksNeeded = Math.ceil(inputs.yta / deponering.blockSize);
+      totalPrice += blocksNeeded * deponering.prisPerBlock;
+    }
+
+  } else if (currentServiceKey === "bygg") {
+
+    const { someSpecialMultiplier } = service.multipliers;
+    const { someExtraCost } = service.extraCosts;
+
+    if (inputs.someSpecialOption === true) {
+      totalPrice *= someSpecialMultiplier;
+
+      totalPrice += someExtraCost.fixedCost;
+    }
+  }
+
+  const formatted = totalPrice.toFixed(0);
+  document.getElementById("calculationResult").innerText =
+    `Pris (exkl. moms): ${formatted} kr`;
+}
